@@ -12,3 +12,6 @@ go get go.mongodb.org/mongo-driver
 
 echo "instalando pacote para cli"
 go get github.com/urfave/cli/v2
+
+echo "instalando pacote de cor"
+go get gopkg.in/gookit/color.v1

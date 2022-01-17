@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/gookit/color.v1"
 )
 
 var (
@@ -123,4 +124,13 @@ func filterTask(filter interface{}) ([]*Task, error) {
 		return tasks, mongo.ErrNoDocuments
 	}
 	return tasks, nil
+}
+
+func printTask(task []*Task) {
+	for i, t := range task {
+		if t.Completed {
+			color.Green.Printf("%d: %s\n", i+1, t.Text)
+		}
+		color.Yellow.Printf("%d: %s\n", i+1, t.Text)
+	}
 }
