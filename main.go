@@ -58,7 +58,7 @@ func main() {
 			tasks, err := getPending()
 			if err != nil {
 				if err == mongo.ErrNoDocuments {
-					fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+					fmt.Println("Nothing to see here.\nRun `add 'task'` to add a task")
 					return nil
 				}
 				return err
@@ -95,7 +95,7 @@ func main() {
 					tasks, err := getAll()
 					if err != nil {
 						if err == mongo.ErrNoDocuments {
-							fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+							fmt.Println("Nothing to see here.\nRun `add 'task'` to add a task")
 							return nil
 						}
 						return err
@@ -121,12 +121,23 @@ func main() {
 					tasks, err := getFinished()
 					if err != nil {
 						if err == mongo.ErrNoDocuments {
-							fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+							fmt.Println("Nothing to see here.\nRun `done 'task'` to complete a task")
 							return nil
 						}
 						return err
 					}
 					printTask(tasks)
+					return nil
+				},
+			},
+			{
+				Name:  "rm",
+				Usage: "delete a task on the list",
+				Action: func(c *cli.Context) error {
+					text := c.Args().First()
+					if err := deleteTask(text); err != nil {
+						return err
+					}
 					return nil
 				},
 			},
@@ -181,6 +192,19 @@ func getFinished() ([]*Task, error) {
 		Key: "completed", Value: true,
 	}}
 	return filterTask(filter)
+}
+
+func deleteTask(text string) error {
+	filter := bson.D{primitive.E{Key: "text", Value: text}}
+
+	res, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("No task were deleted")
+	}
+	return nil
 }
 
 func filterTask(filter interface{}) ([]*Task, error) {
