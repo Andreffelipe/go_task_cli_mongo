@@ -113,6 +113,23 @@ func main() {
 					return completeTask(text)
 				},
 			},
+			{
+				Name:    "finished",
+				Aliases: []string{"f"},
+				Usage:   "List completed tasks",
+				Action: func(_ *cli.Context) error {
+					tasks, err := getFinished()
+					if err != nil {
+						if err == mongo.ErrNoDocuments {
+							fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+							return nil
+						}
+						return err
+					}
+					printTask(tasks)
+					return nil
+				},
+			},
 		},
 	}
 
@@ -155,6 +172,13 @@ func completeTask(text string) error {
 func getPending() ([]*Task, error) {
 	filter := bson.D{primitive.E{
 		Key: "completed", Value: false,
+	}}
+	return filterTask(filter)
+}
+
+func getFinished() ([]*Task, error) {
+	filter := bson.D{primitive.E{
+		Key: "completed", Value: true,
 	}}
 	return filterTask(filter)
 }
