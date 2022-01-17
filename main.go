@@ -54,6 +54,18 @@ func main() {
 	app := &cli.App{
 		Name:  "Tasker",
 		Usage: "A Simple CLI program to manage your task",
+		Action: func(_ *cli.Context) error {
+			tasks, err := getPending()
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+					return nil
+				}
+				return err
+			}
+			printTask(tasks)
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "add",
@@ -138,6 +150,13 @@ func completeTask(text string) error {
 	t := &Task{}
 
 	return collection.FindOneAndUpdate(ctx, filter, update).Decode(&t)
+}
+
+func getPending() ([]*Task, error) {
+	filter := bson.D{primitive.E{
+		Key: "completed", Value: false,
+	}}
+	return filterTask(filter)
 }
 
 func filterTask(filter interface{}) ([]*Task, error) {
