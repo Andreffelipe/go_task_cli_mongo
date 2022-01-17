@@ -76,6 +76,23 @@ func main() {
 					return createTask(task)
 				},
 			},
+			{
+				Name:    "all",
+				Aliases: []string{"l"},
+				Usage:   "List all tasks",
+				Action: func(_ *cli.Context) error {
+					tasks, err := getAll()
+					if err != nil {
+						if err == mongo.ErrNoDocuments {
+							fmt.Println("Nada para ver aqui.\nExecute `add 'task'` para adicionar uma tarefa")
+							return nil
+						}
+						return err
+					}
+					printTask(tasks)
+					return nil
+				},
+			},
 		},
 	}
 
