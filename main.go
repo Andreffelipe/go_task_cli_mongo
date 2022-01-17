@@ -32,7 +32,6 @@ type Task struct {
 func init() {
 	db_url := os.Getenv("DATABASE_URL")
 	if db_url == "" {
-		fmt.Println("Variavel vazia")
 		db_url = "mongodb://root:docker@localhost:27017/"
 	}
 	clientOption := options.Client().ApplyURI(db_url)
@@ -93,11 +92,29 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:    "done",
+				Aliases: []string{"d"},
+				Usage:   "complete a task on the list",
+				Action: func(c *cli.Context) error {
+					text := c.Args().First()
+					return completeTask(text)
+				},
+			},
 		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func printTask(task []*Task) {
+	for i, t := range task {
+		if t.Completed {
+			color.Green.Printf("%d: %s\n", i+1, t.Text)
+		}
+		color.Yellow.Printf("%d: %s\n", i+1, t.Text)
 	}
 }
 
@@ -109,6 +126,18 @@ func createTask(task *Task) error {
 func getAll() ([]*Task, error) {
 	filter := bson.D{}
 	return filterTask(filter)
+}
+
+func completeTask(text string) error {
+	filter := bson.D{primitive.E{Key: "text", Value: text}}
+
+	update := bson.D{primitive.E{Key: "$set", Value: bson.D{
+		primitive.E{Key: "completed", Value: true},
+	}}}
+
+	t := &Task{}
+
+	return collection.FindOneAndUpdate(ctx, filter, update).Decode(&t)
 }
 
 func filterTask(filter interface{}) ([]*Task, error) {
@@ -141,13 +170,4 @@ func filterTask(filter interface{}) ([]*Task, error) {
 		return tasks, mongo.ErrNoDocuments
 	}
 	return tasks, nil
-}
-
-func printTask(task []*Task) {
-	for i, t := range task {
-		if t.Completed {
-			color.Green.Printf("%d: %s\n", i+1, t.Text)
-		}
-		color.Yellow.Printf("%d: %s\n", i+1, t.Text)
-	}
 }
